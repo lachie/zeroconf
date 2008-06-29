@@ -28,7 +28,7 @@ Zeroconf provides:
 * bridging discrepancies between the two extant libraries' implementations.
 * perhaps a rubycocoa based implementation for osx.
 
-Additionally, I'm hoping that this fork will breathe new life into the maintenance and development of the code; net-mdns 0.4.0 2006-05-30; dnssd 0.6.0 was released on 2004-10-07.
+Additionally, I'm hoping that this fork will breathe new life into the maintenance and development of the code; net-mdns 0.4.0 was released on 2006-05-30; dnssd 0.6.0 was released on 2004-10-07.
 
 == Thanks
 
