@@ -10,8 +10,35 @@ Frankenstein marriage of net-mdns and dnssd.
   
 == Usage
 
-Use zeroconf like dnssd. If you find a disparity between the pure and ext 
+Use zeroconf like dnssd. If you find a disparity between the pure and ext that trips you up, send me a patch!
+
+Currently I'm thinking that the interface should be more dnssd-like, since I develop an a mac and get that for free :)
+
+The basic discovery and publishing interfaces are similar. However the details, semantics (esp threading model, exceptions) and implementations are obviously quite different.
+
+== Raison d'être
+
+The interfaces of the C-based dnssd and pure ruby net-mdns are quite similar. However, there's no gem-based mechanism for switching between them based on availability.
+
+This has lead to the forking of many of the *jour apps into dnssd and net-mdns based versions.
+
+Zeroconf provides:
+
+* a json-gem-style way of falling back to the pure-ruby implementation if the ext doesn't work.
+* bridging discrepancies between the two extant libraries' implementations.
+* perhaps a rubycocoa based implementation for osx.
+
+Additionally, I'm hoping that this fork will breathe new life into the maintenance and development of the code; net-mdns 0.4.0 2006-05-30; dnssd 0.6.0 was released on 2004-10-07.
+
+== Thanks
+
+To the original authors of
+
+* dnssd: Charlie Mills, Rich Kilmer, Chad Fowler and Stuart Cheshire.
+* net-mdns: Sam Roberts
 
 == TODO
 
-* make a windows package
+* make the build failing warn but be non-fatal, so that the gem will install on systems without dnssd native libraries.
+* make a windows gem.
+* continue bridging discrepancies between dnssd and net-mdns interfaces
