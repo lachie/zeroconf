@@ -1,0 +1,50 @@
+Version 0.6.0
+
+* Added RDoc to the C files
+* Fixed bug in threading and the service handle
+* Added DNSSD::Reply superclass for all reply objects
+* Added fullname singleton method
+* Added Flag#== method
+
+Version 0.5.0
+
+* First release
+
+Background
+
+This represents a Ruby binding to the DNS Service Discovery API published
+and open-sourced by Apple Computer.  This should compile with the source
+available from the Darwin project, or on OS X Panther systems.  It will 
+also compile on Win32 platforms that have installed the Rendezvous for
+Windows Technology Preview 2 which can be found here:
+
+http://developer.apple.com/macosx/rendezvous/
+
+To build, simply run:
+
+  $ ruby setup.rb config
+  $ ruby setup.rb setup
+  # ruby setup.rb install (may require root privilege)
+
+This installs two files, a high level api:
+
+<ruby lib path>/site_ruby/1.8/dnssd.rb
+
+...and a low level native expension:
+
+<ruby lib path>/site_ruby/1.8/powerpc-darwin/rdnssd.so/.dll/.bundle
+
+The dnssd.rb file is what you require:
+
+  require 'dnssd'
+
+...and that loads the rdnssd native extension.  See the ./test
+directory for tests that demonstrate using the DNSSD library for
+Ruby.
+
+Developers:
+
+Charlie Mills
+Rich Kilmer
+Chad Fowler
+Stuart Cheshire

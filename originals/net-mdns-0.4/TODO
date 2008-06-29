@@ -1,0 +1,278 @@
+TODO
+
+Release: 0.0  "seeing if its possible" - done
+
+Release: 0.1  "making it work"
+
+A complete rewrite, too many changes to even begin to mention.
+
+Release: 0.2  "doing the right thing"
+
+- must always respond to requests for the A record for this host's .local
+  address
+
+- cache the answers in the additional section
+
+- in MDNSSD, put the handle into the reply as the "service" attribute
+
+- need to send TTL=0 message on service shutdown
+
+- implement flags, particularly add/remove flags
+
+- remove all use of absolute in name comparisons, I have had too many bugs
+  involving this
+
+- deal with timeouts in Resolv::MDNS, how long, can they be set, etc.
+
+- reverse lookup of names by addresses using mDNS, see notes in
+  #generate_candidates. I think I should allow reverse lookup of addresss in
+  the private address spaces [RFC1918] (address prefixes of 10/8, 172.16/12,
+  and 192.168/16).
+
+- correctly encode a nil in a text_record, and allow "key" w/no value for "mdns.rb -R"
+
+- probe for name conflicts before registering a service
+
+- when we see a question, flush answers over a few seconds old from cache
+    .. and do we notify queries that the answers are being deleted, too?
+
+- escape/parse DNS-SD names ...
+
+- try the meta-queries (_services._dns-sd._udp.local.)
+
+- add known answers to queries
+
+- answer unicast questions
+
+- implement a MDNSSD api for DNSServiceQueryRecord, and 'mdns.rb -Q"
+
+Release: 0.3  "keep it working"
+
+- Change the technique for looking up IPv4 address of the default interface,
+  the old technique stopped working on OS X boxes that had IPv6 enabled (which
+  was the default).
+
+- Fixed a bug causing infinite loops (in the wrong place) in background query.
+
+
+Todo:
+
+- define constants in module MDNSSD::Types  like Http = '_http._tcp', ...?
+
+- mdns.rb -K, watch for records and immediately register replacements pointing
+  to somewhere else
+
+- general code cleanups
+
+- Add #to_s to the RR types.
+
+- Add #to_s the *classes* of the RR types ("IN::TXT", ...)
+
+- HINFO RR service
+
+- A RR service
+
+- wildcard answering services
+
+- Query#start, #restart
+
+- let Query.new take a block, and yield itself, or yield with every answer?
+
+- move hierarchal DNS Name comparison operators to an optional file.
+
+- DNS packet dumper
+
+- to make both TXT objects and TXT classes have a value,
+  add methods type_value and type_class.
+
+
+
+dns-sd test mode results:
+   -A  ok, but don't support -Q so don't see HINFO add/update/remove
+   -U  ok
+   -N  ok, but don't support -Q so don't see NULL add
+   -T  ok
+   -M  no, we don't support multiple TXT records for a service
+   -I  ok
+
+
+
+Open resolv.rb issues:
+
+- Reverse DNS lookups are done by sock.recv, seems like its a problem for a
+  DNS library...
+
+  Shouldn't BasicSocket.do_not_reverse_lookup be set? Or be set on our sockets?
+  It's weird that in @sock.recv we get a tuple with the address... when we ARE
+  a resolver library.... and if you call resolv-replace, won't we call
+  ourselves in order to resolve the IP when you call recv to get the peer info?
+  And isn't resolv-replace ignoring BasicSocket.do_not_reverse_lookup?  So, it
+  is very weird that resolv.rb does ad socket.recv that causes (blocking) DNS
+  queries to occure for its peer IP address...
+
+- Resolv::Hosts returns IPv6 addresses before IPv4, so Resolv.getaddress('localhost')
+  is ::1 on my system - this is not good.
+
+- See [DNSOPV6:3.1], does resolv.rb do this?
+
+
+[DNSOPV6] 
+[DNSOPBADRES] draft-ietf-dnsop-bad-dns-res-03.tx
+
+Open design issues:
+
+- how to get the local ifx ipv4 address?
+
+- Net classes that do socksetopts, so you don't have to pack the structs
+  yourself! or maybe implement the 8 functions of Stevens?
+
+
+System differences in multicast:
+
+[EACCES] The destination address is a broadcast address, and SO_BROADCAST has not been set on the socket.
+
+
+Comments for DNS-SD:
+
+* domain and type end in a '.', is that necessary?
+
+* Names of Stuff
+
+I'm getting lost in trying to remember what goes into a method, and what is available
+in it's Reply object. I think the following convention would help:
+
+  Every function argument maps to a Reply attribute of the same name.
+
+  The Reply attributes and function arguments should be the same.
+
+This makes things easy to remember, as data goes into #browse, comes out
+BrowseReply, goes into #resolve, comes out ResolveReply it doesn't change its
+name!
+
+
+
+Currently:
+
+  DNSSD::BrowseReply.instance_methods:
+  ["flags", "service", "domain", "fullname", "interface", "name",  "type"]
+
+  Note that #type overrides Object#type.
+  service_type had its name changed to type
+
+  DNSSD::ResolveReply.instance_methods:
+  [ "flags", "service",          "fullname", "interface",                 "port", "target", "text_record"]
+
+  Missing #domain!
+  Missing #name!
+  Missing #type!
+
+  #resolve takes argument #service_name, it comes from BrowseReply#name
+  #resolve takes argument #service_type, it comes from BrowseReply#type
+  #resolve takes argument #service_domain, it comes from BrowseReply#domain
+
+  Note that interface is still interface.
+
+  #browse has argument domain, #register has argument #service_domain
+
+
+  DNSSD::RegisterReply.instance_methods:
+
+  [ "flags", "service", "domain",                        "name",    "type" ]
+
+  Missing #interface, #port, #target, #text_record.
+
+
+As it is, I find the naming really confusing. Changing the names in the replies
+causes interface breakage, so how about changing the names in the arguments so
+they are the same as the attributes in the reply, and so that all 3 functions
+use the same name for the same thing?
+
+
+This code supplies some missing methods:
+
+  module DNSSD
+    def self.namesplit(n)
+      n.scan(/(?:\\.|[^\.])+/)
+    end
+    class ResolveReply
+      def domain
+        DNSSD.namesplit(fullname)[-1]
+      end
+      def type
+        DNSSD.namesplit(fullname)[1,2].join('.')
+      end
+      def name
+        DNSSD.namesplit(fullname)[0]
+      end
+    end
+  end
+
+
+
+
+Comments for Apple:
+
+* [MDNS:5] Reverse Address Mapping - should allow reverse mapping 
+  in the [RFC1918] address space as well. Does Apple's resolver
+  do this?
+
+* TXT record is required by mDNSResponder
+
+DNS-SD does not require a responder advertising a service to have
+a TXT record.
+
+
+Problem:
+
+I assume it is done because if you ask for SRV and TXT (or ANY), and
+get only SRV, you don't know if it is because there is no TXT, or because
+it didn't make it across unreliable UDP.
+
+Solutions:
+
+Require a TXT record (curent mDNSResponder behaviour).
+
+Require that all the questions in a single DNS message be responded
+to in a single DNS message. This allows:
+
+  1 - asking for ANY?, and if you get a SRV but no TXT, it means there
+      is no TXT
+  2 - asking for TXT? and SRV?, and if you get a SRV but no TXT, it means
+      there is no TXT
+
+Recommend:
+
+I prefer the latter. It scales to more than two records associated with a
+service, so in the future if a service needs a SRV, TXT, and NUL record, a
+single query can be sent, and a single query can be expected as a response.
+
+For legacy interop reasons, we are probably stuck with having to advertise a
+TXT record. I still think all questions from a single message should be answered
+in a single message. Possible exception is when to large, in which case the
+TC bit should be set so the resolver knows to expect another message.
+
+
+* TXT records from mDNSResponder may have zero character-strings
+
+Violates DNS spec.
+
+DNS-SD claims to conform to DNS.
+
+DNS-SD says TXT has zero or more character-strings.
+
+Two statements not in agreement.
+
+Recommend that:
+- DNS-SD be altered to state TXT records MUST conform to DNS specs.
+- DNS-SD include a warning that deployed responders generate TXT
+  with zero char-strings, and implementations SHOULD be capable of handling
+  this as being equivalent to a TXT with one zero-length character string.
+
+
+* OS X puts additional answers in the answers section, not the additional section
+
+* OS X resolver generates queries for ensemble.local.local
+
+This violates DNS-SD.
+
+

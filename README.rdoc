@@ -1,0 +1,17 @@
+= Zeroconf
+
+Frankenstein marriage of net-mdns and dnssd.
+
+
+== Installation
+
+  sudo gem sources -a http://gems.github.com
+  sudo gem install lachie-zeroconf
+  
+== Usage
+
+Use zeroconf like dnssd. If you find a disparity between the pure and ext 
+
+== TODO
+
+* make a windows package
